@@ -1,0 +1,107 @@
+{
+  "id": "pelispedia",
+  "name": "Pelispedia",
+  "version": "0.1.0",
+  "apiVersion": 9,
+  "entry": "plugin.js",
+  "icon": "icon.png",
+  "description": "Películas y series en español latino, castellano o subtituladas de pelispedia.is: sección propia, géneros, búsqueda y varias opciones por título.",
+  "author": "xuper-plugin",
+  "homepage": "https://github.com/xuper-plugin/kino-plugin-pelispedia",
+  "hosts": [
+    "pelispedia.is",
+    "fastream.to",
+    "embedwish.com",
+    "hglink.to",
+    "hlswish.com",
+    "streamwish.com",
+    "streamwish.to",
+    "strwish.com",
+    "wishembed.com",
+    "filelions.com",
+    "vibuxer.com",
+    "vidhide.com",
+    "vidhidepro.com",
+    "vidhideplus.com",
+    "vidhidefast.com",
+    "callistanise.com",
+    "dintezuvio.com",
+    "minochinos.com",
+    "filelions.to",
+    "morencius.com"
+  ],
+  "capabilities": [
+    "search",
+    "home",
+    "browse",
+    "episodes",
+    "resolve",
+    "download",
+    "scopedSearch"
+  ],
+  "streamHosts": "any",
+  "categories": [
+    "movies",
+    "series"
+  ],
+  "color": "#7C3AED",
+  "section": {
+    "label": "Pelispedia",
+    "labelEn": "Pelispedia"
+  },
+  "theme": {
+    "accent": "#8B5CF6",
+    "onAccent": "#FFFFFF",
+    "background": "#0E081A",
+    "surface": "#1A1030",
+    "highlight": "#C4B5FD"
+  },
+  "settings": [
+    {
+      "key": "audioSection",
+      "type": "section",
+      "label": "Idioma",
+      "labelEn": "Language",
+      "hint": "Cada título puede traer varios idiomas; Kino abre primero el que elijas y, si falla, los demás.",
+      "hintEn": "A title may come in several languages; Kino opens the one you pick first and, if it fails, the others."
+    },
+    {
+      "key": "audio",
+      "type": "select",
+      "label": "Idioma preferido",
+      "labelEn": "Preferred language",
+      "default": "lat",
+      "options": [
+        {
+          "value": "lat",
+          "label": "Latino",
+          "labelEn": "Latino"
+        },
+        {
+          "value": "cast",
+          "label": "Castellano",
+          "labelEn": "Castilian"
+        },
+        {
+          "value": "sub",
+          "label": "Subtitulado",
+          "labelEn": "Subtitled"
+        }
+      ]
+    },
+    {
+      "key": "info",
+      "type": "status",
+      "label": "Estado",
+      "labelEn": "Status"
+    },
+    {
+      "key": "clearCache",
+      "type": "action",
+      "label": "Vaciar caché",
+      "labelEn": "Clear cache",
+      "confirm": "¿Vaciar la caché de listas?",
+      "confirmEn": "Clear the list cache?"
+    }
+  ]
+}
