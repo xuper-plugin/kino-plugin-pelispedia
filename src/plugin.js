@@ -57,7 +57,7 @@ async function cached(key, fn) {
 const fold = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const hash36 = (s) => { let h = 5381; for (const ch of String(s)) h = ((h * 33) ^ ch.codePointAt(0)) >>> 0; return h.toString(36); };
 
-function toItem(card) {
+function toItem(card, genreName) {
   const item = {
     id: "pp-" + (fold(card.slug).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 90) || "t") + "-" + hash36(card.kind + card.slug),
     ref: (card.kind === "movie" ? "m:" : "s:") + card.slug, title: card.title, kind: card.kind,
@@ -65,7 +65,8 @@ function toItem(card) {
   if (card.poster) item.poster = card.poster;
   if (card.year) item.year = String(card.year);
   if (card.rating) item.rating = card.rating;
-  if (card.quality) item.badges = [card.quality];
+  if (card.quality) { item.quality = card.quality.slice(0, 20); item.badges = [card.quality]; }
+  if (genreName) item.genres = [genreName];
   return item;
 }
 
@@ -82,7 +83,7 @@ function refOf(ref) {
   if (!m) return null;
   if (m[1] === "list") { const l = LISTS[m[2]]; return l ? { ...l, title: t(l.titleKey) } : null; }
   const g = GENRES.find((x) => x[0] === m[2]);
-  return g ? { path: "/category/" + g[0] + "/", title: g[1], genre: undefined } : null;
+  return g ? { path: "/category/" + g[0] + "/", title: g[1], genre: undefined, genreName: g[1] } : null;
 }
 
 async function listPage(def, page) {
@@ -96,7 +97,7 @@ const safeRow = async (id, fn) => { try { return await fn(); } catch (e) { kino.
 async function rowOf(id, ref, genre) {
   const def = refOf(ref);
   const { cards } = await listPage(def, 1);
-  const items = cards.slice(0, 20).map(toItem);
+  const items = cards.slice(0, 20).map((c) => toItem(c, def.genreName));
   return items.length ? { id, title: def.title, items, ref, genre: genre || def.genre || "peliculas" } : null;
 }
 
@@ -117,7 +118,7 @@ export async function browse(ref, cursor) {
   if (!def) return { items: [] };
   const page = cursor ? Math.max(1, parseInt(cursor, 10) || 1) : 1;
   const { cards, more } = await listPage(def, page);
-  return { items: cards.map(toItem), next: more ? String(page + 1) : undefined };
+  return { items: cards.map((c) => toItem(c, def.genreName)), next: more ? String(page + 1) : undefined };
 }
 
 export async function search(arg) {
@@ -126,7 +127,7 @@ export async function search(arg) {
   if (q.length < 2) return [];
   const cards = await cached("s:" + q.toLowerCase(), async () => parseCards(await getPage(`${SITE}/?s=${encodeURIComponent(q)}`)));
   const only = within && within.path === LISTS.peliculas.path ? "movie" : within && within.path === LISTS.series.path ? "series" : null;
-  return cards.filter((c) => !only || c.kind === only).slice(0, 40).map(toItem);
+  return cards.filter((c) => !only || c.kind === only).slice(0, 40).map((c) => toItem(c));
 }
 
 // ---- the plugin's own section, categories and details ----
@@ -140,14 +141,14 @@ export async function section({ tab } = {}) {
     rows = [await safeRow("peliculas", () => rowOf("peliculas", "list:peliculas"))];
     rows.push(await safeRow("peliculas2", async () => {
       const { cards } = await listPage(refOf("list:peliculas"), 2);
-      const items = cards.map(toItem);
+      const items = cards.map((c) => toItem(c));
       return items.length ? { id: "peliculas2", title: `${t("more")} ${t("movies")}`, items, genre: "peliculas" } : null;
     }));
   } else if (chosen === "series") {
     rows = [await safeRow("series", () => rowOf("series", "list:series"))];
     rows.push(await safeRow("series2", async () => {
       const { cards } = await listPage(refOf("list:series"), 2);
-      const items = cards.map(toItem);
+      const items = cards.map((c) => toItem(c));
       return items.length ? { id: "series2", title: `${t("more")} ${t("series")}`, items, genre: "series" } : null;
     }));
   } else rows = await Promise.all(GENRES.slice(0, 6).map(([slug]) => safeRow("g-" + slug, () => rowOf("g-" + slug, "genre:" + slug, slug))));

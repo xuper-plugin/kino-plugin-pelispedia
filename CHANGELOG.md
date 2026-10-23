@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Genre pages carry their genre on every title, the quality is also sent as `quality`, and `telemetry` is added.
+  / Cada título de un género lleva su género, la calidad también va como `quality` y se agrega `telemetry`.
+
 ## 0.1.0
 
 - First version, built on Kino's plugin API from the start: **Home rows**, a **section of its own** (four tabs and a hero), **categories** (12 genres),
