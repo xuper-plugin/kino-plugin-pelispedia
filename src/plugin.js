@@ -8,6 +8,7 @@ import { SITE, GENRES, parseCards, parseTitle, parseEpisodes, parseOptions, pars
 import { extractorFor } from "./extractors/index.js";
 import { makeReq, UA } from "./util/http.js";
 import { searchWithTerms } from "./util/terms.js";
+import { homeWithin } from "./util/home.js";
 
 const CACHE_MS = 10 * 60 * 1000;
 const RESOLVE_MS = 40000;
@@ -106,13 +107,13 @@ async function rowOf(id, ref, genre) {
 // ---- exports ----
 
 export async function home() {
-  return (await Promise.all([
-    safeRow("peliculas", () => rowOf("peliculas", "list:peliculas")),
-    safeRow("series", () => rowOf("series", "list:series")),
-    safeRow("accion", () => rowOf("accion", "genre:accion", "accion")),
-    safeRow("terror", () => rowOf("terror", "genre:terror", "terror")),
-    safeRow("comedia", () => rowOf("comedia", "genre:comedia", "comedia")),
-  ])).filter(Boolean);
+  return homeWithin([
+    () => safeRow("peliculas", () => rowOf("peliculas", "list:peliculas")),
+    () => safeRow("series", () => rowOf("series", "list:series")),
+    () => safeRow("accion", () => rowOf("accion", "genre:accion", "accion")),
+    () => safeRow("terror", () => rowOf("terror", "genre:terror", "terror")),
+    () => safeRow("comedia", () => rowOf("comedia", "genre:comedia", "comedia")),
+  ]);
 }
 
 export async function browse(ref, cursor) {
