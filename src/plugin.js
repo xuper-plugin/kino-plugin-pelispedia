@@ -20,6 +20,19 @@ globalThis.__kinoDropPendingFetches = true;
 
 const CACHE_MS = 10 * 60 * 1000;
 const RESOLVE_MS = 40000;
+const MAX_CAPTURES = 1;
+
+// A WebView capture costs up to 20 s whether or not it finds the video, so the budget is spent on the ATTEMPT, and a capture
+// only starts if a whole page still fits before this resolve's deadline (Kino gives a browser plugin 75 s; a resolve that
+// chained several failed captures ran past it and the person was left on an endless spinner).
+const CAPTURE_PAGE_MS = 23000;
+/** Spend one hidden-browser capture if the budget and the clock allow it; asked right before the capture starts. */
+function takeCapture(budget) {
+  if (!budget || budget.captures <= 0 || budget.deadline - Date.now() < CAPTURE_PAGE_MS) return false;
+  budget.captures -= 1;
+  return true;
+}
+
 const PAGE = 18;
 
 // ---- i18n ----
@@ -278,6 +291,7 @@ export async function resolve(ref) {
   if (!pageUrl) throw kino.error("not_found", "unknown ref: " + ref);
   if (!(await resolverInstalled(kino))) throw kino.error("unavailable", "resolver missing", { userMessage: t("needResolver") });
   const req = makeReq(kino, { deadline: Date.now() + RESOLVE_MS });
+  const budget = { captures: MAX_CAPTURES, deadline: Date.now() + RESOLVE_MS };
   const options = await optionsOf(pageUrl, req);
   if (!options.length) throw kino.error("not_found", "no options on " + pageUrl, { userMessage: t("noStreams") });
   // Auto pick: keep the plan's language tiers, but inside each try the server that has opened for this person first.
@@ -290,7 +304,7 @@ export async function resolve(ref) {
     if (!o) continue;
     try {
       // The hoster embed goes to the shared kino-resolver (door), with a WebView capture fallback for gated hosts.
-      const out = await resolveViaHelper(o.embed, kino, SITE + "/");
+      const out = await resolveViaHelper(o.embed, kino, SITE + "/", () => takeCapture(budget));
       if (!out) { failures.push(`${o.host}: no stream`); noteServer(o.host, false); continue; }
       noteServer(o.host, true);
       const stream = { url: out.url, mime: out.mime, headers: { "User-Agent": UA, ...(out.headers || {}) }, label: labelOf(o) };

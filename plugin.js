@@ -674,7 +674,7 @@ async function resolveViaHelper(embedUrl, kino2, referer, allowCapture = true) {
   let streams = res && Array.isArray(res.streams) ? res.streams.slice() : [];
   const subtitles = res && Array.isArray(res.subtitles) ? res.subtitles.filter((x) => x && x.lang && x.url) : [];
   let captured = false;
-  if (!streams.length && allowCapture) {
+  if (!streams.length && (typeof allowCapture === "function" ? allowCapture() : allowCapture)) {
     streams = await captureStreams(kino2, embedUrl, referer);
     captured = streams.length > 0;
   }
@@ -771,6 +771,13 @@ async function homeWithin(jobs, { key = "home:last", budgetMs = BUDGET_MS } = {}
 globalThis.__kinoDropPendingFetches = true;
 var CACHE_MS = 10 * 60 * 1e3;
 var RESOLVE_MS = 4e4;
+var MAX_CAPTURES = 1;
+var CAPTURE_PAGE_MS = 23e3;
+function takeCapture(budget) {
+  if (!budget || budget.captures <= 0 || budget.deadline - Date.now() < CAPTURE_PAGE_MS) return false;
+  budget.captures -= 1;
+  return true;
+}
 var PAGE = 18;
 var STRINGS = {
   es: {
@@ -1057,6 +1064,7 @@ async function resolve(ref) {
   if (!pageUrl) throw kino.error("not_found", "unknown ref: " + ref);
   if (!await resolverInstalled(kino)) throw kino.error("unavailable", "resolver missing", { userMessage: t("needResolver") });
   const req = makeReq(kino, { deadline: Date.now() + RESOLVE_MS });
+  const budget = { captures: MAX_CAPTURES, deadline: Date.now() + RESOLVE_MS };
   const options = await optionsOf(pageUrl, req);
   if (!options.length) throw kino.error("not_found", "no options on " + pageUrl, { userMessage: t("noStreams") });
   const stats = readStats();
@@ -1066,7 +1074,7 @@ async function resolve(ref) {
     const o = options[i];
     if (!o) continue;
     try {
-      const out = await resolveViaHelper(o.embed, kino, SITE + "/");
+      const out = await resolveViaHelper(o.embed, kino, SITE + "/", () => takeCapture(budget));
       if (!out) {
         failures.push(`${o.host}: no stream`);
         noteServer(o.host, false);
