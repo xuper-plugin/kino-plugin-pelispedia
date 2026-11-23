@@ -14,7 +14,15 @@ var GENRES = [
   ["suspense", "Suspense"],
   ["terror", "Terror"]
 ];
-var decode = (s) => String(s || "").replace(/&#0?38;|&amp;/g, "&").replace(/&quot;|&#0?34;/g, '"').replace(/&#0?39;|&#8217;|&#x27;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ");
+var NAMED_ENTITIES = { ndash: "\u2013", mdash: "\u2014", hellip: "\u2026", lsquo: "\u2018", rsquo: "\u2019", ldquo: "\u201C", rdquo: "\u201D", nbsp: " ", iexcl: "\xA1", iquest: "\xBF", laquo: "\xAB", raquo: "\xBB", aacute: "\xE1", eacute: "\xE9", iacute: "\xED", oacute: "\xF3", uacute: "\xFA", ntilde: "\xF1", Aacute: "\xC1", Eacute: "\xC9", Iacute: "\xCD", Oacute: "\xD3", Uacute: "\xDA", Ntilde: "\xD1", uuml: "\xFC" };
+var decodeMore = (s) => s.replace(/&#([0-9]{1,7});/g, (m, n) => {
+  const c = Number(n);
+  return c > 0 && c <= 1114111 ? String.fromCodePoint(c) : m;
+}).replace(/&#x([0-9a-f]{1,6});/gi, (m, h) => {
+  const c = parseInt(h, 16);
+  return c > 0 && c <= 1114111 ? String.fromCodePoint(c) : m;
+}).replace(/&([a-z]+);/gi, (m, k) => NAMED_ENTITIES[k] ?? m);
+var decode = (s) => decodeMore(String(s || "").replace(/&#0?38;|&amp;/g, "&").replace(/&quot;|&#0?34;/g, '"').replace(/&#0?39;|&#8217;|&#x27;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " "));
 var text = (s) => decode(String(s || "").replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
 var img = (u) => !u ? "" : u.startsWith("//") ? "https:" + u : u;
 function parseCards(html) {
