@@ -1,7 +1,7 @@
 {
   "id": "pelispedia",
   "name": "Pelispedia",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "apiVersion": 30,
   "entry": "plugin.js",
   "icon": "icon.png",
@@ -163,6 +163,6 @@
   },
   "signature": {
     "authorKey": "6693946bd5c56196960959c4b9665fad5094374bcb85ddb282f8bf762c835263",
-    "value": "8c64034ea8ce3c228e1b256fb68b057edbe702b11307793a2ad2f90aebc240422eb4a23750772ac3133928379d11557b84236ffcfb106fcfb791bdd43e606f0b"
+    "value": "9666c7ea1fa71794176b5621ae6a24947ad77f901e2175e4927464f816651cc41f277d07cefa0ae4761b694b891b3704d2f24b8dc49f6e4b2120ffec716a280c"
   }
 }
