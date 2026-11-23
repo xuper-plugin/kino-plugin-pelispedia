@@ -1,8 +1,8 @@
 {
   "id": "pelispedia",
   "name": "Pelispedia",
-  "version": "0.3.4",
-  "apiVersion": 20,
+  "version": "0.4.0",
+  "apiVersion": 30,
   "entry": "plugin.js",
   "icon": "icon.png",
   "description": "Películas y series en español latino, castellano o subtituladas de pelispedia.is: sección propia, géneros, búsqueda y varias opciones por título.",
