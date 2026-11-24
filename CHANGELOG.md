@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.8
+
+- Home: a row of the site's Familia genre filed under Infantil (Películas and Series rows are typed; the site has no anime section)
+
 ## 0.4.7
 
 - Categorías: every genre tile now shows a picture (a well-known TMDB backdrop per genre, no extra requests)

@@ -41,6 +41,7 @@ const PAGE = 18;
 const STRINGS = {
   es: {
     news: "Novedades", movies: "Películas", series: "Series", genres: "Géneros", recentMovies: "Películas", recentSeries: "Series", more: "Más",
+    kids: "Infantil",
     lat: "Latino", sub: "Subtitulado", cast: "Castellano", episode: "Episodio",
     heroText: "Películas y series en español, con estrenos al día.",
     unavailable: "El servicio no está disponible en este momento.", noEpisodes: "No se encontraron episodios de esta serie.", noStreams: "Ningún servidor de este título abrió. Prueba más tarde.",
@@ -49,6 +50,7 @@ const STRINGS = {
   },
   en: {
     news: "What's new", movies: "Movies", series: "Series", genres: "Genres", recentMovies: "Movies", recentSeries: "Series", more: "More",
+    kids: "Kids",
     lat: "Latino", sub: "Subtitled", cast: "Castilian", episode: "Episode",
     heroText: "Movies and series in Spanish, with new releases.",
     unavailable: "The service is not available right now.", noEpisodes: "No episodes found for this series.", noStreams: "No server of this title opened. Try again later.",
@@ -121,23 +123,26 @@ async function listPage(def, page) {
 
 const safeRow = async (id, fn) => { try { return await fn(); } catch (e) { kino.log("row " + id + ": " + (e && e.message)); return null; } };
 
-async function rowOf(id, ref, genre) {
+async function rowOf(id, ref, genre, title) {
   const def = refOf(ref);
   const { cards } = await listPage(def, 1);
   const items = cards.slice(0, 20).map((c) => toItem(c, def.genreName));
-  return items.length ? { id, title: def.title, items, ref, genre: genre || def.genre || "peliculas" } : null;
+  return items.length ? { id, title: title || def.title, items, ref, genre: genre || def.genre || "peliculas" } : null;
 }
 
 // ---- exports ----
 
+/**
+ * The Home's rows: [id, ref, type tag, title key]. The tag is what Kino files the row's titles under (Películas, Series, and Infantil
+ * from the site's Familia genre); the genre rows keep their own genre as the tag. The site has no anime section.
+ */
+export const HOME_ROWS = [["peliculas", "list:peliculas"], ["series", "list:series"], ["infantil", "genre:familia", "infantil", "kids"], ["accion", "genre:accion", "accion"], ["terror", "genre:terror", "terror"], ["comedia", "genre:comedia", "comedia"]];
+
+/** The type tag each Home row carries, by row id. */
+export const homeRowTags = () => Object.fromEntries(HOME_ROWS.map(([id, ref, genre]) => [id, genre || refOf(ref).genre]));
+
 export async function home() {
-  return homeWithin([
-    () => safeRow("peliculas", () => rowOf("peliculas", "list:peliculas")),
-    () => safeRow("series", () => rowOf("series", "list:series")),
-    () => safeRow("accion", () => rowOf("accion", "genre:accion", "accion")),
-    () => safeRow("terror", () => rowOf("terror", "genre:terror", "terror")),
-    () => safeRow("comedia", () => rowOf("comedia", "genre:comedia", "comedia")),
-  ]);
+  return homeWithin(HOME_ROWS.map(([id, ref, genre, key]) => () => safeRow(id, () => rowOf(id, ref, genre, key ? t(key) : undefined))));
 }
 
 export async function browse(ref, cursor) {

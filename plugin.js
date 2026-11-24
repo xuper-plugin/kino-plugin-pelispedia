@@ -1090,6 +1090,7 @@ var STRINGS = {
     recentMovies: "Pel\xEDculas",
     recentSeries: "Series",
     more: "M\xE1s",
+    kids: "Infantil",
     lat: "Latino",
     sub: "Subtitulado",
     cast: "Castellano",
@@ -1110,6 +1111,7 @@ var STRINGS = {
     recentMovies: "Movies",
     recentSeries: "Series",
     more: "More",
+    kids: "Kids",
     lat: "Latino",
     sub: "Subtitled",
     cast: "Castilian",
@@ -1197,20 +1199,16 @@ var safeRow = async (id, fn) => {
     return null;
   }
 };
-async function rowOf(id, ref, genre) {
+async function rowOf(id, ref, genre, title) {
   const def = refOf(ref);
   const { cards } = await listPage(def, 1);
   const items = cards.slice(0, 20).map((c) => toItem(c, def.genreName));
-  return items.length ? { id, title: def.title, items, ref, genre: genre || def.genre || "peliculas" } : null;
+  return items.length ? { id, title: title || def.title, items, ref, genre: genre || def.genre || "peliculas" } : null;
 }
+var HOME_ROWS = [["peliculas", "list:peliculas"], ["series", "list:series"], ["infantil", "genre:familia", "infantil", "kids"], ["accion", "genre:accion", "accion"], ["terror", "genre:terror", "terror"], ["comedia", "genre:comedia", "comedia"]];
+var homeRowTags = () => Object.fromEntries(HOME_ROWS.map(([id, ref, genre]) => [id, genre || refOf(ref).genre]));
 async function home() {
-  return homeWithin([
-    () => safeRow("peliculas", () => rowOf("peliculas", "list:peliculas")),
-    () => safeRow("series", () => rowOf("series", "list:series")),
-    () => safeRow("accion", () => rowOf("accion", "genre:accion", "accion")),
-    () => safeRow("terror", () => rowOf("terror", "genre:terror", "terror")),
-    () => safeRow("comedia", () => rowOf("comedia", "genre:comedia", "comedia"))
-  ]);
+  return homeWithin(HOME_ROWS.map(([id, ref, genre, key]) => () => safeRow(id, () => rowOf(id, ref, genre, key ? t(key) : void 0))));
 }
 async function browse(ref, cursor) {
   const def = refOf(ref);
@@ -1477,12 +1475,14 @@ async function screenEvent(ev) {
 }
 var proto_catalog_search = catalogDoor(search);
 export {
+  HOME_ROWS,
   action,
   browse,
   categories,
   details,
   episodes,
   home,
+  homeRowTags,
   proto_catalog_search,
   resolve,
   screen,
