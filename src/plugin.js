@@ -106,13 +106,17 @@ const LISTS = {
   series: { path: "/cartelera-series/", titleKey: "recentSeries", genre: "series" },
 };
 
-/** `{ path, title, genre }` for a browse ref ("list:<name>" or "genre:<slug>"); null for anything else. */
+/**
+ * `{ path, title, genre, start }` for a browse ref ("list:<name>" or "genre:<slug>", with ":p<n>" when its list starts at page n:
+ * the "Más …" rows are page 2, so their "Ver más" goes on from there); null for anything else.
+ */
 function refOf(ref) {
-  const m = /^(list|genre):([a-z0-9-]+)$/.exec(String(ref || ""));
+  const m = /^(list|genre):([a-z0-9-]+)(?::p([1-9]\d{0,3}))?$/.exec(String(ref || ""));
   if (!m) return null;
-  if (m[1] === "list") { const l = LISTS[m[2]]; return l ? { ...l, title: t(l.titleKey) } : null; }
+  const start = m[3] ? Number(m[3]) : 1;
+  if (m[1] === "list") { const l = LISTS[m[2]]; return l ? { ...l, title: t(l.titleKey), start } : null; }
   const g = GENRES.find((x) => x[0] === m[2]);
-  return g ? { path: "/category/" + g[0] + "/", title: g[1], genre: undefined, genreName: g[1] } : null;
+  return g ? { path: "/category/" + g[0] + "/", title: g[1], genre: undefined, genreName: g[1], start } : null;
 }
 
 async function listPage(def, page) {
@@ -148,7 +152,7 @@ export async function home() {
 export async function browse(ref, cursor) {
   const def = refOf(ref);
   if (!def) return { items: [] };
-  const page = cursor ? Math.max(1, parseInt(cursor, 10) || 1) : 1;
+  const page = cursor ? Math.max(1, parseInt(cursor, 10) || 1) : def.start;
   const { cards, more } = await listPage(def, page);
   return { items: cards.map((c) => toItem(c, def.genreName)), next: more ? String(page + 1) : undefined };
 }
@@ -176,14 +180,14 @@ export async function section({ tab } = {}) {
     rows.push(await safeRow("peliculas2", async () => {
       const { cards } = await listPage(refOf("list:peliculas"), 2);
       const items = cards.map((c) => toItem(c));
-      return items.length ? { id: "peliculas2", title: `${t("more")} ${t("movies")}`, items, genre: "peliculas" } : null;
+      return items.length ? { id: "peliculas2", title: `${t("more")} ${t("movies")}`, items, ref: "list:peliculas:p2", genre: "peliculas" } : null;
     }));
   } else if (chosen === "series") {
     rows = [await safeRow("series", () => rowOf("series", "list:series"))];
     rows.push(await safeRow("series2", async () => {
       const { cards } = await listPage(refOf("list:series"), 2);
       const items = cards.map((c) => toItem(c));
-      return items.length ? { id: "series2", title: `${t("more")} ${t("series")}`, items, genre: "series" } : null;
+      return items.length ? { id: "series2", title: `${t("more")} ${t("series")}`, items, ref: "list:series:p2", genre: "series" } : null;
     }));
   } else rows = await Promise.all(GENRES.slice(0, 6).map(([slug]) => safeRow("g-" + slug, () => rowOf("g-" + slug, "genre:" + slug, slug))));
   rows = rows.filter(Boolean);
