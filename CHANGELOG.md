@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.9
+
+- The catalog door also lists a series' episodes, for the author's other plugins (std 1.10.0)
+
 ## 0.4.8
 
 - Home: a row of the site's Familia genre filed under Infantil (Películas and Series rows are typed; the site has no anime section)
